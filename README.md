@@ -612,7 +612,7 @@ top    = a      top    = len(code(a))
 bottom = b      bottom = b
 ```
 
-## EXTICODECOPY
+## EXTCODECOPY
 
 -   Hex: `0x3c`
 -   Gas used: `3 + 3 * data_size_words(len in bytes) + mem_expansion_cost`
@@ -661,7 +661,7 @@ top    = a      top    = d
 bottom = d
 ```
 
-## EXITCODEHASH
+## EXTCODEHASH
 
 -   Hex: `0x3f`
 -   Gas used: `100/2600`
