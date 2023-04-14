@@ -544,14 +544,14 @@ bottom = b      ...    = a
 -   Description: Copies the data in the call data to memory.
 
 ```
+Memory: [a:a+c] = msg.data[b:b+c]
+
 Before          After
 
 top    = a      top    = d
 ...    = b
 ...    = c
 bottom = d
-
-Memory: [a:a+c] = msg.data[b:b+c]
 ```
 
 ## CODESIZE
@@ -575,14 +575,14 @@ bottom = b      ...    = a
 -   Description: Copies the code of the current contract to memory.
 
 ```
+Memory: [a:a+c] = this.code[b:b+c]
+
 Before          After
 
 top    = a      top    = d
 ...    = b
 ...    = c
 bottom = d
-
-Memory: [a:a+c] = this.code[b:b+c]
 ```
 
 ## GASPRICE
@@ -623,6 +623,8 @@ bottom = b      bottom = b
 ```
 
 ```
+Memory: [b:b+d] = code(a)[c:c+d]
+
 Before          After
 
 top    = a      top    = e
@@ -630,8 +632,6 @@ top    = a      top    = e
 ...    = c
 ...    = d
 bottom = e
-
-Memory: [b:b+d] = code(a)[c:c+d]
 ```
 
 ## RETURNDATASIZE
@@ -655,14 +655,14 @@ bottom = b      ...    = a
 -   Description: Copies the return data of the current call to memory.
 
 ```
+Memory: [a:a+c] = returndata[b:b+c]
+
 Before          After
 
 top    = a      top    = d
 ...    = b
 ...    = c
 bottom = d
-
-Memory: [a:a+c] = returndata[b:b+c]
 ```
 
 ## EXTCODEHASH
@@ -823,13 +823,13 @@ bottom = b      bottom = b
 -   Description: Stores 32 bytes from the stack to the memory starting at the given position.
 
 ```
+Memory: [a:a+32] = b
+
 Before          After
 
 top    = a      top    = c
 ...    = b
 bottom = c
-
-Memory: [a:a+32] = b
 ```
 
 ## MSTORE8
@@ -839,13 +839,13 @@ Memory: [a:a+32] = b
 -   Description: Stores 1 byte from the stack to the memory starting at the given position.
 
 ```
+Memory: [a:a+1] = b
+
 Before          After
 
 top    = a      top    = c
 ...    = b
 bottom = c
-
-Memory: [a:a+1] = b
 ```
 
 ## SLOAD
@@ -868,13 +868,13 @@ bottom = b      bottom = b
 -   Description: Stores the value from the stack to the storage slot with the given index.
 
 ```
+Storage: storage[a] = b
+
 Before          After
 
 top    = a      top    = c
 ...    = b
 bottom = c
-
-Storage: storage[a] = b
 ```
 
 ## JUMP
@@ -884,13 +884,13 @@ Storage: storage[a] = b
 -   Description: Performs an unconditional jump to a new location in the byte code. (The destination has to be a valid jump destination.)
 
 ```
+Jump at a'th byte in the byte code
+
 Before          After
 
 top    = a      top    = b
 ...    = b      bottom = c
 bottom = c
-
-Jump at a'th byte in the byte code
 ```
 
 ## JUMPI
@@ -900,13 +900,13 @@ Jump at a'th byte in the byte code
 -   Description: Performs a jump to a new location in the byte code if the second top-most element of the stack is not zero. (The destination has to be a valid jump destination.)
 
 ```
+Jump at a'th byte in the byte code if b != 0
+
 Before          After
 
 top    = a      top    = c
 ...    = b
 bottom = c
-
-Jump at a'th byte in the byte code if b != 0
 ```
 
 ## PC
@@ -1008,13 +1008,13 @@ bottom = c      bottom = c
 -   Description: Creates a log entry with no topics with data from the memory starting at the given position and with the given length.
 
 ```
+Log: Memory[a:a+b]
+
 Before          After
 
 top    = a      top    = c
 ...    = b
 bottom = c
-
-Log: Memory[a:a+b]
 ```
 
 ## LOG1 to LOG4
@@ -1024,30 +1024,181 @@ Log: Memory[a:a+b]
 -   Description: Creates a log entry with n topics with data from the memory starting at the given position and with the given length.
 
 ```
+Log: Memory[a:a+b] with topics c
+
 Before          After
 
 top    = a      top    = d
 ...    = b
 ...    = c
 bottom = d
-
-Log: Memory[a:a+b] with topics c
 ```
 
 ## CREATE
 
 -   Hex: `0xf0`
--   Gas used: `32000 + 700 * mem_expansion_cost`
+-   Gas used: `32000 + 700 * mem_expansion_cost` + `code_deposit_cost` (More on code deposit cost [here](https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a9-create-operations)
 -   Description: Creates a new contract with the given code and sends the given amount of ether to it and pushes the address of the new contract to the stack.
 
 ```
+Create contract with code Memory[a:a+b] and send b ether
+
 Before          After
 
 top    = a      top    = address(new_contract)
 ...    = b      bottom = c
 bottom = c
-
-Create contract with code Memory[a:a+b] and send b ether
 ```
 
-##
+## CALL
+
+-   Hex: `0xf1`
+-   Gas used: [Call opperations costs](https://github.com/wolflo/evm-opcodes/blob/main/gas.md#aa-call-operations)
+-   Description: Calls the given address with the given amount of ether and the given input data and pushes the result to the stack.
+
+```
+call(gas: a, to: b, value: c, inputData: memory[d:d+e], outputData: memory[f:f+g])
+
+Before          After
+
+top    = a      top    = result(0/1)
+...    = b      bottom    = h
+...    = c
+...    = d
+...    = e
+...    = f
+...    = g
+bottom = h
+```
+
+## CALLCODE
+
+-   Hex: `0xf2`
+-   Gas used: [Call opperations costs](https://github.com/wolflo/evm-opcodes/blob/main/gas.md#aa-call-operations)
+-   Description: same as DELEGATECALL, but does not propagate original msg.sender and msg.value.
+
+```
+call(gas: a, to: b, value: c, inputData: memory[d:d+e], outputData: memory[f:f+g])
+
+Before          After
+
+top    = a      top    = result(0/1)
+...    = b      bottom    = h
+...    = c
+...    = d
+...    = e
+...    = f
+...    = g
+bottom = h
+```
+
+## RETURN
+
+-   Hex: `0xf3`
+-   Gas used: `0` or `mem_expansion_cost` if memory is expanded
+-   Description: Stops execution and returns data from the memory starting at the given position and with the given length.
+
+```
+Return Memory[a:a+b]
+
+Before          After
+
+top    = a      top    = c
+...    = b
+bottom = c
+```
+
+## DELEGATECALL
+
+-   Hex: `0xf4`
+-   Gas used: [Call opperations costs](https://github.com/wolflo/evm-opcodes/blob/main/gas.md#aa-call-operations)
+-   Description: The code of the called contract is executed on the current contract's context(storage, msg.sedner and msg.value).
+
+```
+call(gas: a, to: b, inputData: memory[c:c+d], outputData: memory[e:e+f])
+
+Before          After
+
+top    = a      top    = result(0/1)
+...    = b      bottom    = g
+...    = c
+...    = d
+...    = e
+...    = f
+bottom = g
+```
+
+## CREATE2
+
+-   Hex: `0xf5`
+-   Gas used: `32000 + 700 * mem_expansion_cost`+ `code_deposit_cost` (More on code deposit cost [here](https://github.com/wolflo/evm-opcodes/blob/main/gas.md#a9-create-operations))
+-   Description: Creates a new contract with the given code and sends the given amount of ether to it and pushes the address of the new contract to the stack.
+
+```
+create(value: a, memStart: b, memLength: c, salt: d)
+
+Before          After
+
+top    = a      top    = address(new_contract)
+...    = b      bottom = e
+...    = c
+...    = d
+bottom = e
+```
+
+## STATICCALL
+
+-   Hex: `0xfa`
+-   Gas used: [Call opperations costs](https://github.com/wolflo/evm-opcodes/blob/main/gas.md#aa-call-operations)
+-   Description: Calls the given address like call, but guarantees that the called contract cannot modify the state.
+
+```
+call(gas: a, to: b, inputData: memory[c:c+d], outputData: memory[e:e+f])
+
+Before          After
+
+top    = a      top    = result(0/1)
+...    = b      bottom    = g
+...    = c
+...    = d
+...    = e
+...    = f
+bottom = g
+```
+
+## REVERT
+
+-   Hex: `0xfd`
+-   Gas used: `0` or `mem_expansion_cost` if memory is expanded
+-   Description: Stops execution and reverts state changes, but unlike RETURN it also returns data from the memory starting at the given position and with the given length.
+
+```
+Revert memory[a:a+b]
+
+Before          After
+
+top    = a      top    = c
+...    = b
+bottom = c
+```
+
+## SELFDESTRUCT
+
+-   Hex: `0xff`
+-   Gas used: `5000` + `ETH transfer cost`
+-   Description: Stops execution, destroys the current contract and sends its funds to the given address.
+
+```
+Selfdestruct to address a
+
+Before          After
+
+top    = a      top    = b
+bottom = b
+```
+
+## Invalid opcodes
+
+The invalid opcodes are: `0x0c - 0x0f`, `0x1e-0x1f`, `0x49-0x4f`, `0x5c-0x5f`, `0xa5-0xef`, `0xf6-0xf9`, `0xfb-0xfc` and `0xfe`.
+
+On execution of any invalid operation, whether the designated INVALID opcode or simply an undefined opcode, all remaining gas is consumed and the state is reverted to the point immediately prior to the beginning of the current execution context.
