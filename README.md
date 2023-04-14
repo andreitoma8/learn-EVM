@@ -612,15 +612,11 @@ top    = a      top    = len(code(a))
 bottom = b      bottom = b
 ```
 
-## EXTCODECOPY
+## EXTICODECOPY
 
 -   Hex: `0x3c`
 -   Gas used: `3 + 3 * data_size_words(len in bytes) + mem_expansion_cost`
 -   Description: Copies the code of a given address to memory.
-
-```
-
-```
 
 ```
 Memory: [b:b+d] = code(a)[c:c+d]
@@ -665,7 +661,7 @@ top    = a      top    = d
 bottom = d
 ```
 
-## EXTCODEHASH
+## EXITCODEHASH
 
 -   Hex: `0x3f`
 -   Gas used: `100/2600`
