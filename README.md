@@ -1329,8 +1329,6 @@ If we combine the two parts that we created above, we get:
 PUSH1 0x08 PUSH1 0x00 MSTORE PUSH1 0x20 PUSH1 0x00 RETURN PUSH1 0x0a PUSH1 __ PUSH1 0x00 CODECOPY PUSH1 0x0a PUSH1 0x00 RETURN
 ```
 
-```
-
 The only thing left to do is to replace the `__` placeholder with the offset of the runtime bytecode, which is `0x0c` (12 bytes) from the start of the bytecode.
 
 So the final bytecode is:
@@ -1339,7 +1337,7 @@ So the final bytecode is:
 
 60 08 60 00 52 60 20 60 00 f3 60 0a 60 0c 60 00 39 60 0a 60 00 f3
 
-````
+```
 
 ## Deploying the contract
 
@@ -1383,4 +1381,4 @@ contract BytecodeDeployer {
         return response;
     }
 }
-````
+```
