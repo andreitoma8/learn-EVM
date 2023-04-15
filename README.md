@@ -77,7 +77,7 @@ All the Ethereum Opcodes are listed in the [Ethereum Yellow Paper](https://ether
 
 OpCodes are 8-bit values that represent operations that can be performed on the EVM. They each have a specific gas cost and can be used to perform a specific operation.
 
-## See a complete list of EVM Opcodes[here](), where I explain each one of them, with examples of how they interact with the stack, memory and storage.
+**[See a complete list of EVM Opcodes here](https://github.com/andreitoma8/learn-EVM/blob/master/EVM-Opcodes.md)**, where I explain each one of them, with examples of how they interact with the stack, memory and storage.
 
 # Creating a Contract with Bytecode and Deploying it to the Blockchain
 
