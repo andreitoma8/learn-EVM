@@ -205,8 +205,8 @@ So now we have the creation bytecode of the contract, which is:
 If we combine the two parts that we created above, we get:
 
 ```
- 60    08   60    00    52    60    20    60   00    f3    60    0a   60   __   60   00     39     60    0a   60    00    f3
-PUSH1 0x08 PUSH1 0x00 MSTORE PUSH1 0x20 PUSH1 0x00 RETURN PUSH1 0x0a PUSH1 __ PUSH1 0x00 CODECOPY PUSH1 0x0a PUSH1 0x00 RETURN
+ 60    0a   60   __   60   00     39     60    0a   60    00    f3    60    08   60    00    52    60    20    60   00    f3
+PUSH1 0x0a PUSH1 __ PUSH1 0x00 CODECOPY PUSH1 0x0a PUSH1 0x00 RETURN PUSH1 0x08 PUSH1 0x00 MSTORE PUSH1 0x20 PUSH1 0x00 RETURN
 ```
 
 The only thing left to do is to replace the `__` placeholder with the offset of the runtime bytecode, which is `0x0c` (12 bytes) from the start of the bytecode.
@@ -215,13 +215,55 @@ So the final bytecode is:
 
 ```
 
-60 08 60 00 52 60 20 60 00 f3 60 0a 60 0c 60 00 39 60 0a 60 00 f3
+60    0a   60    0c   60   00     39     60    0a   60    00    f3    60    08   60    00    52    60    20    60   00    f3
 
+```
+
+## But could we optimize this bytecode?
+
+Yes, we can introduce `DUP` to the mix and avoid declarin a extra 3 bytes that `PUSH1` need(it's params).
+
+For the Runtime Bytecode, we PUSH `0x00` two times, so we can use `DUP` to duplicate the value on the top of the stack. But to do this, we need to change the order of adding the values to the stack, so they are not used and basically deleted before we get the chance to duplicate them. We will first build our stack and then use the same `MSTORE` and `RETURN` opcodes, but both at the end. So our stack will need to look like this:
+
+```
+top    = 0x00
+...    = 0x08
+...    = 0x00
+bottom = 0x20
+```
+
+But instead of using `PUSH1` to add the second `0x00` to the stack, we will use `DUP2` to duplicate the second most recent value on the stack, which is `0x00`. So our new bytecode for the for the runtime bytecode is:
+
+```
+60 08 60 00 52 60 20 60 81 f3 // PUSH1 0x08 PUSH1 0x00 MSTORE PUSH1 0x20 PUSH1 DUP2 RETURN
+```
+
+For the creation bytecode, we will use the same approach, first adding all the values to the stack and then using `CODECOPY` and `RETURN` at the end, all while using `DUP` to avoid using `PUSH1`. Our stack will need to look like this before performing the operations:
+
+```
+top    = 0x00
+...    = 0xOfeset
+...    = 0x09(runtime bytecode size)
+...    = 0x00
+bottom = 0x09(runtime bytecode size)
+```
+
+As you can see, `0x00` and `0x09` repeat, so we can use `DUP2` and `DUP3` to duplicate them. So our new bytecode for the creation bytecode is:
+
+```
+60 09 60 00 81 60 0a 82 39 f3 // PUSH1 0x09 PUSH1 0x00 DUP2 PUSH1 0x0a DUP3 CODECOPY RETURN
+```
+
+And the final optimized bytecode is:
+
+```
+ 60    09   60    00   81   60    0a   82     39      f3    60    08   60    00    52    60    20   60    81    f3
+PUSH1 0x09 PUSH1 0x00 DUP2 PUSH1 0x0a DUP3 CODECOPY RETURN PUSH1 0x08 PUSH1 0x00 MSTORE PUSH1 0x20 PUSH1 DUP2 RETURN
 ```
 
 ## Deploying the contract
 
-Now that we have the bytecode of the contract, we can deploy it. You can take the following snippet and run it in Remix to deploy the contract.
+Now that we have the bytecode of the contract, we can deploy it. You can take the following snippet and run it in Remix to deploy the contract and check the return value of `callDeployedContract()`.
 
 ```solidity
 // SPDX-License-Identifier: MIT
@@ -233,7 +275,7 @@ contract BytecodeDeployer {
     // First we need to deploy the contract
     function deploy() external {
         // Store the bytecode in memory
-        bytes memory bytecode = hex"600a600c600039600a6000f3600860005260206000f3";
+        bytes memory bytecode = hex"6009600081600a8239f36020600060088152f3";
 
         // Create a local variable to store the address of the deployed contract
         address addr;
