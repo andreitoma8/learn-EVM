@@ -4,7 +4,7 @@
 
 -   [High level overview](#high-level-overview)
 -   [Ethereum Transactions](#ethereum-transactions)
--   [Data locations in the EVM](#data-locations-in-the-evm)
+-   [Data in the EVM](#data-in-the-evm)
 -   [EVM Opcodes](#evm-opcodes)
 -   [Creating a Contract with Bytecode and Deploying it to the Blockchain](#creating-a-contract-with-bytecode-and-deploying-it-to-the-blockchain)
 
@@ -39,37 +39,45 @@ The EVM is a stack-based virtual machine that executes bytecode. The bytecode is
     -   And for `Smart Contract calls`, it contains the hash of the invoked method signature and encoded parameters(by Solidity standards).
     -   `v`, `r`, `s`: The components of the transaction signature.
 
-# Data locations in the EVM
+# Data in the EVM
 
 Stack, Memory, Storage, Code, Call Data & Logs
 
 ## Stack
 
-The stack is a temporary storage data location in the EVM. It is a 256-bit word array.
+The stack is a temporary storage data location in the EVM. It is a 32 bytes elements array and has a maximum lenght of 1024. For each smart contract call, one stack is created and used to store temporary data that is used during the execution of the smart contract.
 
-EVM Opcodes pop information from the stack and push information to the stack.
-
-When pushing to the stack, the stack grows from the bottom to the top. When popping from the stack, the stack grows from the top to the bottom.
-
-## CallData
-
-CallData is the data field of a transaction. It is the data passed to a smart contract when it is called.
+EVM Opcodes pop information from the stack and push information to the stack. When pushing to the stack, the stack grows from the bottom to the top. When popping from the stack, the stack grows from the top to the bottom.
 
 ## Memory
 
-Memory is a linear memory space that is accessible for the duration of a transaction. It is a 256-bit word array.
+Memory is a linear memory space that is accessible for the duration of a transaction. It is a 256-bit word array that is initialized empty and can grow as needed.
 
 ## Storage
 
-Storage is a persistent memory space that is accessible for the duration of a contract. It is a 256-bit word array.
+Storage is a persistent memory space that is accessible for the duration of a contract. It is a map of 32 bytes slot to 32 bytes values.
+
+## CallData
+
+CallData is the data field of a transaction. It is the data passed to a smart contract when it is called and it is immutable.
+
+## ReturnData
+
+ReturnData is the data returned by a smart contract when it is called. It is immutable.
 
 ## Code
 
-Code is the code of a smart contract, but can also be used for data storage(constants in smart contracts, which are stored in it's bitecode).
+Code is the code of a smart contract, but can also be used for data storage(constants in Solidity in smart contracts, which are stored in it's bitecode).
 
 ## Logs
 
 Write-only logger / event output.
+
+# Smart Contracts
+
+## What is a Smart Contract?
+
+A smart contract is a set of instructions. Each instruction is an opcode (with their own handy mnemonic for reference, text representations of their assigned values between 0 and 255). When the EVM executes a smart contract, it reads and executes each instruction sequentially(except for JUMP and JUMPI instructions, which jump to a specific instruction). If an instruction cannot be executed, for instance, if there are not enough values on the stack, or insufficient gas, the execution reverts. In the event of a reverted transaction, any state changes dictated by the transaction instructions are returned to their state before the transaction.
 
 # EVM Opcodes
 
