@@ -157,6 +157,8 @@ So now we have the runtime bytecode of the contract, which is:
 
 Now we need to create the creation bytecode of the contract, which has to return the runtime bytecode of the contract. Similar to the above, we need to first store the runtime bytecode in memory and then return it.
 
+If you want to follow along while reading this, you can use [EVM Codes' Playground](https://www.evm.codes/playground) where you can write the bytecode and see how it interacts with the stack and memory.
+
 #### Adding the runtime bytecode to memory
 
 Adding the runtime bytecode to memory we will use the `CODECOPY(p, o, s)` opcode, which takes three arguments: the `p` position in memory where we want to store the runtime bytecode, the `o` offset in the code where the runtime bytecode starts and the `s` the size of the of the bytes array that we want to copy. The position we will add the value in memory is `0x00`, the offset is still to be determined (we need to finish the creation bytecode first, so we will use a `__` placeholder) and the size is `0x0a` (10 bytes).
