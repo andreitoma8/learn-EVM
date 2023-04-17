@@ -7,6 +7,7 @@
 -   [Data in the EVM](#data-in-the-evm)
 -   [EVM Opcodes](#evm-opcodes)
 -   [Creating a Contract with Bytecode and Deploying it to the Blockchain](#creating-a-contract-with-bytecode-and-deploying-it-to-the-blockchain)
+-   [Bonus: Demistifying the `Stack too deep` error](#bonus-demistifying-the-stack-too-deep-error)
 
 # High level overview
 
@@ -314,3 +315,11 @@ contract BytecodeDeployer {
     }
 }
 ```
+
+# Bonus: Demistifying the `Stack too deep` error
+
+If you've developed Solidity Smart Contracts before, the changes are that you've encountered the `Stack too deep` error at least once. This error is thrown when your code declare too many variables. But why is that?
+
+The EVM has a stack of 1024 slots, and each slot can hold a 256-bit value. But you are not really reaching this limit, but another limit that is given by the `DUP` and `SWAP` opcodes. These opcodes allow you to duplicate or swap values on the stack, but they only allow you to do this with the top 16 values on the stack.
+
+So when at some point in your code you have to access a value that is not in the top 16 values on the stack, you will get the `Stack too deep` error because Solidity does not have a way to access the data.
