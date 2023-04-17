@@ -1038,17 +1038,18 @@ bottom = c
 
 -   Hex: `0xa1` - `0xa4`
 -   Gas used: `375 + 375 * num_topics + 8 * data_size + mem_expansion_cost`
--   Description: Creates a log entry with n topics with data from the memory starting at the given position and with the given length.
+-   Description: Creates a log entry with n topics with data from the memory starting at the given position and with the given length. The first topic used in the LOG is the hash of the signature of the event.
 
 ```
-Log: Memory[a:a+b] with topics c
+Log: Memory[a:a+b] with topics c, d where c = hash(signature_of_event)
 
 Before          After
 
-top    = a      top    = d
+top    = a      top    = e
 ...    = b
 ...    = c
-bottom = d
+...    = d
+bottom = e
 ```
 
 ## CREATE
