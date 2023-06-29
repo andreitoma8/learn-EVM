@@ -122,11 +122,19 @@ Stack, Memory, Storage, Code, Call Data & Logs
 
 The stack is a temporary storage data location in the EVM. It is a 32 bytes elements array and has a maximum lenght of 1024. For each smart contract call, one stack is created and used to store temporary data that is used during the execution of the smart contract.
 
+If a call is made from a smart contract to another smart contract, a new stack is created and used for the execution of the called smart contract, and the stack of the caller smart contract is preserved and then returned to after executing the call.
+
+When it comes to calling internal functions of the same smart contract, the stack is preserved.
+
 EVM Opcodes pop information from the stack and push information to the stack. When pushing to the stack, the stack grows from the bottom to the top. When popping from the stack, the stack grows from the top to the bottom.
 
 ## Memory
 
 Memory is a linear memory space that is accessible for the duration of a transaction. It is a 256-bit word array that is initialized empty and can grow as needed.
+
+Same as with the stack, if a call is made from a smart contract to another smart contract, a new memory is created and used for the execution of the called smart contract, and the memory of the caller smart contract is preserved and then returned to after executing the call.
+
+When it comes to calling internal functions of the same smart contract, the memory is preserved.
 
 ## Storage
 
@@ -161,6 +169,12 @@ All the Ethereum Opcodes are listed in the [Ethereum Yellow Paper](https://ether
 OpCodes are 8-bit values that represent operations that can be performed on the EVM. They each have a specific gas cost and can be used to perform a specific operation.
 
 **[See a complete list of EVM Opcodes here](https://github.com/andreitoma8/learn-EVM/blob/master/EVM-Opcodes.md)**, where I explain each one of them, with examples of how they interact with the stack, memory and storage.
+
+## Smart Contract Calls:
+
+-   `CALL`: Low-level call that allows to call any smart contract and pass any amount of gas and any number of arguments, executing the called smart contract's code.
+-   `DELEGATECALL`: Low-level call that is similar to `CALL`, executing the called smart contract's code, but with the context of the calling smart contract. This means that the logic of the called smart contract is executed, but the storage, balance and address of the calling smart contract is used.
+-   `STATICCALL`: Low-level call that is similar to `CALL`, but it is read-only, meaning that it cannot modify the state of the blockchain. If any modification is attempted, the transaction will revert.
 
 # Creating a Contract with Bytecode and Deploying it to the Blockchain
 
