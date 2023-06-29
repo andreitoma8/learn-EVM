@@ -23,11 +23,72 @@ The Ethereum Network is composed of multiple Nodes that each run Clients. Each c
 
 The EVM is a stack-based virtual machine that executes bytecode. The bytecode is generated from the Solidity/Vyper/Yul/Huff source code.
 
+# Ethereum accounts
+
+Each account on Ethereum is represented by an address: There are two types of accounts in Ethereum:
+
+-   Externally Owned Accounts (EOA)
+-   Smart Contract
+
+## Externally Owned Accounts (EOA)
+
+An Externally Owned Account is an account that is controlled by a private key. It is created when a user generates a new private key and public key pair. The public key is then hashed to create the address of the account. This is your tipical account that people use to store, send and receive ETH, as well as interact with smart contracts.
+
+`Notes`
+
+-   Only this type of account can initiate a blockchain transaction.
+-   This type of account cannot store code.
+
+## Smart Contract
+
+A Smart Contract is an account that is controlled by code and can be created both by a EOA or by another Smart Contract. The address of the smart contract is derived in different ways, depending on how the smart contract is created(see Opcodes `CREATE` and `CREATE2`). This type of account is used to store code and data, and can be used to store ETH as well.
+
+`Notes`:
+
+-   This type of account cannot initiate a blockchain transaction.
+-   This type of account can store code.
+
+# EVM Components
+
+## Global Variables
+
+These are values that are accessible to all smart contracts and are updated by the EVM as the blockchain grows.
+
+-   `Block`:
+    -   `Number`: The number of the block.
+    -   `Timestamp`: The timestamp of the block in UNIX format.
+-   `Transaction`:
+    -   `Origin`: The EOA that initiated the transaction.
+    -   `Gas Price`: The price of gas for the transaction.
+-   `Message`:
+    -   `Sender`: The EOA that initiated the transaction.
+    -   `Value`: The Ether value of the transaction.
+    -   `Data`: The data of the transaction.
+
+## Persistent Storage
+
+This is data that will persist on the blockchain between transactions.
+
+-   `Smart Contract`:
+    -   `Code`: The code of a smart contract, composed of opcodes and data(like Solidity constants).
+    -   `Storage`: The storage of a smart contract, composed of 32 bytes slots that can be read and written to.
+-   `Machine State`:
+    -   `Account Iformation`: The information of an account, composed of the account's nonce and balance.
+
+## Volatile Data
+
+This is data that will not persist on the blockchain between transactions and is only available during the execution of a smart contract. After the end of the transaction, this data is lost.
+
+-   `Program Counter`: The current position of the EVM in the bytecode of the smart contract. This is used to keep track of the next opcode to be executed.
+-   `Gas`: The amount of gas left for the execution of the smart contract. As opcodes are executed, the gas is consumed. If the gas runs out, the execution of the smart contract is reverted. If there is gas left after the execution of the smart contract, it is refunded to the sender.
+-   `Stack`: Laid out in 32 bytes sequences, it is working as LIFO(Last In First Out). It is used to store temporary data like local variables and function arguments.
+-   `Memory`: Laid out in 32 bytes sequences, it is used to store data that is not needed after the execution of the smart contract. It is used to store data that is too big to fit in the stack.
+
 # Ethereum Transactions
 
 ### Transaction fiels
 
--   `Nonce`: The number of transactions sent by the sender. Starts at 0.
+-   `Nonce`: The number of transactions sent by the sender. Starts at 0 and is incremented for every transaction sent from the same address. This is created so the same transaction cannot be sent twice, avoiding signature replays.
 -   `Gas Price`: The price of gas for this transaction in wei.
 -   `Gas Limit`: The maximum amount of gas that should be used in this transaction.
     -   For value transfers, this is set to 21,000(the fixed cost of a ETH transfer).
@@ -35,10 +96,23 @@ The EVM is a stack-based virtual machine that executes bytecode. The bytecode is
     -   For a contract creation transaction, this must be left empty.
 -   `Value`: The value in wei to be transferred to the message call's recipient or in the case of a contract creation, as an endowment to the newly created account.
 -   `Data`: The data sent with the transfer.
-    -   In case of `Value transfers`, this is left empty.
-    -   For `Smart Contract deployments`, this contains the compiled code of a contract.
+    -   In case of `Value transfers` to an EOA, this can be left empty, or data can be added just as a way to add a message to the transaction.
+    -   For `Smart Contract deployments`, this contains the compiled code of a contract(creation bytecode).
     -   And for `Smart Contract calls`, it contains the hash of the invoked method signature and encoded parameters(by Solidity standards).
     -   `v`, `r`, `s`: The components of the transaction signature.
+
+### Transaction Lifecycle
+
+1.  The transaction is created and signed by the sender.
+2.  The transaction is sent to a node that does the following:
+    1. Checks if the transaction is valid.
+    2. Spins up a EVM instance.
+    3. Load state from the database.(global variables, persistent storage)
+    4. Executes the transaction:
+        1. Executes all the opcodes in the transaction.
+        2. Updates the state of the EVM.
+        3. Reduces the gas left for the transaction.
+3.  The transaction is added to the blockchain and the state is saved to the database, while the stack and memory are wiped.
 
 # Data in the EVM
 
@@ -320,6 +394,6 @@ contract BytecodeDeployer {
 
 If you've developed Solidity Smart Contracts before, the changes are that you've encountered the `Stack too deep` error at least once. This error is thrown when your code declare too many variables. But why is that?
 
-The EVM has a stack of 1024 slots, and each slot can hold a 256-bit value. But you are not really reaching this limit, but another limit that is given by the `DUP` and `SWAP` opcodes. These opcodes allow you to duplicate or swap values on the stack, but they only allow you to do this with the top 16 values on the stack.
+The EVM has a stack of 1024 slots, and each slot can hold a 256-bit value. You are not really reaching this limit, but another limit that is given by the `DUP` and `SWAP` opcodes. These opcodes allow you to duplicate or swap values on the stack, but they only allow you to do this with the top 16 values on the stack.
 
-So when at some point in your code you have to access a value that is not in the top 16 values on the stack, you will get the `Stack too deep` error because Solidity does not have a way to access the data.
+So when at some point in your code you have to access a value that is not in the top 16 values on the stack, you will get the `Stack too deep` error because Solidity does not have a way to access the data and execute your logic.
